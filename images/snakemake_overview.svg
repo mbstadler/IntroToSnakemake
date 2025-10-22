@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 2000 1660" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;">
+    <g id="Layer-1" serif:id="Layer 1" transform="matrix(5.55556,0,0,5.55556,0,60)">
+        <g id="rect25" transform="matrix(1,0,0,1,-29.9236,-19.7022)">
+            <rect x="150.217" y="14.032" width="113.906" height="14.219" style="fill:rgb(205,205,205);"/>
+        </g>
+        <g id="rect26" transform="matrix(1,0,0,1,-29.9236,2.79381)">
+            <rect x="150.217" y="243.574" width="113.906" height="14.219" style="fill:rgb(205,205,205);"/>
+        </g>
+        <g id="rect27" transform="matrix(1,0,0,1,-29.9236,-9.44286)">
+            <rect x="46.56" y="86.308" width="218.086" height="14.219" style="fill:rgb(205,205,205);"/>
+        </g>
+        <g id="rect1" transform="matrix(1,0,0,1.09189,-29.9236,-17.394)">
+            <rect x="46.782" y="86.53" width="217.642" height="118.967" style="fill:none;stroke:black;stroke-width:0.69px;"/>
+        </g>
+        <g id="image1" transform="matrix(0.161743,0,0,0.161743,295.714,104.908)">
+            <use xlink:href="#_Image1" x="0" y="0" width="200px" height="200px"/>
+        </g>
+        <g id="path16" transform="matrix(0.18,0,0,0.18,-29.9236,-11.0904)">
+            <path d="M1197.07,418.378L1174.38,378.414L1197.07,378.414L1197.07,313.553L1235.38,313.553L1235.38,378.414L1258.87,378.414L1216.27,452.199L1197.14,418.495L1197.14,418.495L1197.07,418.378Z" style="fill:rgb(128,128,128);stroke:rgb(128,128,128);stroke-width:0.41px;"/>
+        </g>
+        <g id="path161" serif:id="path16" transform="matrix(0.18,0,0,0.18,-29.9236,158.301)">
+            <path d="M1197.07,418.378L1174.38,378.414L1197.07,378.414L1197.07,313.553L1235.38,313.553L1235.38,378.414L1258.87,378.414L1216.27,452.199L1197.14,418.495L1197.14,418.495L1197.07,418.378Z" style="fill:rgb(128,128,128);stroke:rgb(128,128,128);stroke-width:0.41px;"/>
+        </g>
+        <g id="rect23" transform="matrix(1,0,0,1.18641,-29.9236,-22.3179)">
+            <rect x="150.217" y="14.032" width="113.906" height="37.474" style="fill:none;stroke:black;stroke-width:0.7px;"/>
+        </g>
+        <g transform="matrix(0.18,0,0,0.18,47.5761,-24.8182)">
+            <g transform="matrix(66.6667,0,0,66.6667,615.184,167.779)">
+            </g>
+            <text x="415.184px" y="167.779px" style="font-family:'SourceCodeProRoman-SemiBold', 'Source Code Pro ExtraLight', monospace;font-weight:200;font-size:66.667px;">input</text>
+        </g>
+        <g transform="matrix(0.18,0,0,0.18,84.9814,-7.88037)">
+            <text x="415.184px" y="167.779px" style="font-family:'SourceCodeProRoman-SemiBold', 'Source Code Pro ExtraLight', monospace;font-weight:200;font-size:55.556px;">seqs.fastq</text>
+            <g transform="matrix(55.5556,0,0,55.5556,815.184,223.334)">
+            </g>
+            <text x="415.184px" y="223.334px" style="font-family:'SourceCodeProRoman-SemiBold', 'Source Code Pro ExtraLight', monospace;font-weight:200;font-size:55.556px;">genome.fasta</text>
+        </g>
+        <g transform="matrix(0.18,0,0,0.18,98.7996,244.598)">
+            <g transform="matrix(55.5556,0,0,55.5556,735.184,167.779)">
+            </g>
+            <text x="468.517px" y="167.779px" style="font-family:'SourceCodeProRoman-SemiBold', 'Source Code Pro ExtraLight', monospace;font-weight:200;font-size:55.556px;">alns.bam</text>
+        </g>
+        <g transform="matrix(0.18,0,0,0.18,-55.7867,57.7145)">
+            <g transform="matrix(66.6667,0,0,66.6667,615.184,167.779)">
+            </g>
+            <g transform="matrix(66.6667,0,0,66.6667,635.184,167.779)">
+            </g>
+            <g transform="matrix(66.6667,0,0,66.6667,735.184,167.779)">
+            </g>
+            <text x="415.184px" y="167.779px" style="font-family:'SourceCodeProRoman-SemiBold', 'Source Code Pro ExtraLight', monospace;font-weight:200;font-size:66.667px;">Snakeﬁle</text>
+        </g>
+        <g transform="matrix(0.18,0,0,0.18,176.768,107.227)">
+            <g transform="matrix(166.667,0,0,166.667,515.184,167.779)">
+            </g>
+            <text x="415.184px" y="167.779px" style="font-family:'SourceCodeProRoman-SemiBold', 'Source Code Pro ExtraLight', monospace;font-weight:200;font-size:166.667px;">+</text>
+        </g>
+        <g transform="matrix(0.18,0,0,0.18,204.522,119.802)">
+            <g transform="matrix(66.6667,0,0,66.6667,775.184,167.779)">
+            </g>
+            <text x="415.184px" y="167.779px" style="font-family:'SourceCodeProRoman-SemiBold', 'Source Code Pro ExtraLight', monospace;font-weight:200;font-size:66.667px;">Snakemake</text>
+        </g>
+        <g transform="matrix(0.18,0,0,0.18,-33.8627,79.5833)">
+            <text x="415.184px" y="167.779px" style="font-family:'SourceCodeProRoman-SemiBold', 'Source Code Pro ExtraLight', monospace;font-weight:200;font-size:55.556px;">rule align_seqs:</text>
+            <text x="481.85px" y="223.334px" style="font-family:'SourceCodeProRoman-SemiBold', 'Source Code Pro ExtraLight', monospace;font-weight:200;font-size:55.556px;">input:</text>
+            <text x="548.517px" y="278.89px" style="font-family:'SourceCodeProRoman-SemiBold', 'Source Code Pro ExtraLight', monospace;font-weight:200;font-size:55.556px;">seqs = seqs.fastq,</text>
+            <text x="548.517px" y="334.445px" style="font-family:'SourceCodeProRoman-SemiBold', 'Source Code Pro ExtraLight', monospace;font-weight:200;font-size:55.556px;">genome = genome.fasta</text>
+            <text x="481.85px" y="390.001px" style="font-family:'SourceCodeProRoman-SemiBold', 'Source Code Pro ExtraLight', monospace;font-weight:200;font-size:55.556px;">output:</text>
+            <text x="548.517px" y="445.557px" style="font-family:'SourceCodeProRoman-SemiBold', 'Source Code Pro ExtraLight', monospace;font-weight:200;font-size:55.556px;">bam = alns.bam</text>
+            <text x="481.85px" y="501.112px" style="font-family:'SourceCodeProRoman-SemiBold', 'Source Code Pro ExtraLight', monospace;font-weight:200;font-size:55.556px;">shell:</text>
+            <text x="548.517px" y="556.668px" style="font-family:'SourceCodeProRoman-SemiBold', 'Source Code Pro ExtraLight', monospace;font-weight:200;font-size:55.556px;">aligntool {input.seqs} \</text>
+            <text x="881.85px" y="612.223px" style="font-family:'SourceCodeProRoman-SemiBold', 'Source Code Pro ExtraLight', monospace;font-weight:200;font-size:55.556px;">{input.genome} \</text>
+            <g transform="matrix(55.5556,0,0,55.5556,1281.85,667.779)">
+            </g>
+            <text x="881.85px" y="667.779px" style="font-family:'SourceCodeProRoman-SemiBold', 'Source Code Pro ExtraLight', monospace;font-weight:200;font-size:55.556px;">{output.bam}</text>
+        </g>
+        <g transform="matrix(0.18,0,0,0.18,47.9434,226.23)">
+            <g transform="matrix(66.6667,0,0,66.6667,655.184,167.779)">
+            </g>
+            <text x="415.184px" y="167.779px" style="font-family:'SourceCodeProRoman-SemiBold', 'Source Code Pro ExtraLight', monospace;font-weight:200;font-size:66.667px;">output</text>
+        </g>
+        <g id="rect24" transform="matrix(1,0,0,0.912621,-29.9236,24.1078)">
+            <rect x="150.217" y="243.926" width="113.906" height="37.474" style="fill:none;stroke:black;stroke-width:0.7px;"/>
+        </g>
+    </g>
+    <defs>
+        <image id="_Image1" width="200px" height="200px" xlink:href="data:image/png;base64,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"/>
+    </defs>
+</svg>

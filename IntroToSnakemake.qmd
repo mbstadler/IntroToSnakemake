@@ -1,0 +1,883 @@
+---
+title: "Introduction to workflow management with snakemake"
+author: "Charlotte Soneson, Michael Stadler, Hans-Rudolf Hotz"
+date: today
+date-format: long
+format: 
+    html:
+        embed-resources: true
+        callout-appearance: minimal
+        table-of-contents: true
+        theme: united
+        code-copy: true
+---
+
+# What is workflow management?
+
+![[https://slides.com/johanneskoester/sustainable-data-analysis-with-snakemake-non-bio#/2](https://slides.com/johanneskoester/sustainable-data-analysis-with-snakemake-non-bio#/2)](images/why-workflow-management.png)
+
+Workflow management systems are an integral part of the reproducible research toolbox, as they allow automated execution of an (arbitrarily long and complex) analysis workflow, thereby removing the need to manually keep track of the interdependencies of all the components and make sure that they are all up-to-date with each other.
+
+They also enable us to easily and automatically run several jobs in parallel when possible (given their interdependencies and the total amount of allocated resources), and to run the same workflow on many different platforms, from a laptop to a high-performance computing cluster. 
+
+In addition, many workflow management systems integrate nicely with tools such as environment modules, `conda`, `Docker` and `Singularity`/`Apptainer`, which allows us to also control the software environment in which each job is executed.
+
+Finally, using a workflow management system is an excellent way of 'enforcing' structure and organization of the code in a project, as it requires a precise specification of how the different steps are related to each other. 
+
+In the "five pillars of reproducible research" (see this [publication](https://academic.oup.com/bib/article/24/6/bbad375/7326135) by Ziemann et al.), they can therefore cover aspects in the pillars "Code version control", "Compute environment control" and "Documentation": 
+
+<center>
+![](images/reproducibility-pillars.jpeg)
+</center>
+
+There are several widely used workflow management systems - here we will use `snakemake`, but other tools, such as `nextflow` or `Galaxy`, follow similar principles. 
+A (much) longer list of tools can be found [here](https://github.com/pditommaso/awesome-pipeline).
+
+# What is snakemake? 
+
+[snakemake](https://snakemake.github.io/) is a workflow management system that lets you create readable, reproducible and scalable workflows for any type of data analysis task. 
+A `snakemake` workflow consists of _rules_, with defined inputs and outputs and a procedure for how to generate the outputs from the inputs. 
+
+These rules are defined in a `Snakefile`, a script written in a python-based specification language:
+
+![snakemake overview](snakemake_overview.png)
+
+Based on the defined rules, `snakemake` derives the dependencies between rules, which can be represented as a graph (rules are the nodes, their dependencies are the directed connections):
+
+![[https://slides.com/johanneskoester/sustainable-data-analysis-with-snakemake-non-bio#/11](https://slides.com/johanneskoester/sustainable-data-analysis-with-snakemake-non-bio#/11)](images/rule_directed_acyclic_graph.png)
+
+The graph determines the order in which the rules have to be executed. `snakemake` also keeps track of the modification times of all files, as well as the rule definitions and parameters themselves, so when an input file or a rule changes, it will know which rules to rerun to update all results.
+
+At FMI, several versions of `snakemake` are installed on the xenon servers via
+the module system. At the moment, we recommend using version 9.12.0. 
+Thus, to get started using `snakemake` on one of the xenon servers, login to
+a server using `ssh` and type the following in a terminal window: 
+
+::: {.callout-warning}
+```
+module purge
+module load snakemake/9.12.0-foss-2024.05
+```
+:::
+
+Throughout this document, commands to execute in the terminal are shown in orange boxes, as above.
+
+# Data
+
+The data that we will work with today is a plain text file with the tragedy "Romeo and Juliet" by William Shakespeare which is available for for download for free from [Project Gutenberg](https://www.gutenberg.org/ebooks/1513). We will download it using `snakemake` later.
+
+# Plan for today
+
+In this session, the aim is to create a `snakemake` workflow that analyses `romeo_and_juliet.txt`, covering the following steps:
+
+- Count the number of characters/words/lines in the text
+- Count the number of occurrences of `Romeo` or `Juliet` in the text
+- Identify the 10 most frequent words in the text
+- Create and compile a small Quarto report with word cloud visualization from the 100 most frequent words
+
+# Step 1: Create the `Snakefile`
+
+We will start by initializing the `Snakefile`. 
+First, create a working directory in a suitable folder, where you have write access (**not** in your home directory - use your user folder under `/tachyon/groups/` or `/tachyon/scratch`).
+In the example below, this folder is created on the command line and is called `snakemake_intro`.
+Within this working directory, create an empty file called `Snakefile` (without extension). 
+E.g., from the Terminal:
+
+::: {.callout-warning}
+```
+mkdir snakemake_intro
+cd snakemake_intro
+
+touch Snakefile
+```
+:::
+
+Next, open the `Snakefile` in a text editor of your choice.
+In many cases, it can be useful to have a variable defining the working directory in the `Snakefile` - thus, add the following line in the top of your file: 
+
+::: {.callout-note}
+```
+topdir = "<here, put the full path to your working directory>"
+```
+:::
+
+Throughout this document, lines to add to the `Snakefile` are given in blue boxes, as above. 
+
+# Step 2: Prepare the data
+
+In a typical `snakemake` workflow, you start by preparing your input data.
+It is good practice to separate raw data from derived data that is generated
+by your analyses. Here, we will put the input data underneath `data_raw` and
+the generated output underneath `data_processed`.
+
+If your data already lives on the `tachyon` filesystem, you could directly
+use it from its storage location. However, it may make it easier to have
+everything together in one folder, which you can achieve by making symbolic
+links to your data in `data_raw` (don't copy the data!).
+
+In our case, the data needs to be downloaded from the internet, which we will
+do using `snakemake` itself. This way, also the data source is documented and
+our complete workflow is reproducible.
+
+## Step 2a: Create a rule to download the data
+
+Let's write our first rule in `Snakefile` for downloading the text and store it
+in `data_raw/romeo_and_juliet.txt`:
+
+::: {.callout-note}
+```
+## Download data
+rule download_data:
+	output: 
+		txt = "data_raw/romeo_and_juliet.txt",
+	params:
+	    url = "https://www.gutenberg.org/ebooks/1513.txt.utf-8",
+	shell:
+		'''
+		curl -L -o {output.txt} {params.url}
+		'''
+```
+:::
+
+Each rule starts with the line `rule <rule_name>:`, following by the details defining the rule, such as input files, output files, and how to create the output file from the input file.
+The indentation level specifies the hierarchy (e.g. 'output' belongs to the 'download_data' rule, 'txt' is a member of 'output', etc.), similar as it does in Python code.
+Commas at the end of the lines are needed if there are multiple lines with the same indentation level. Therefore, the comma at the end of the lines starting with `txt = ...` and `url = ...` are not strictly needed, but also don't harm. The triple single-quote (`'''`) is like a normal single (`'`) or double (`"`) quote, but allows to write a string that extends over multiple lines.
+
+The `shell` section specifies the command to run, tpycially using placeholders in braces `{...}` to refer to variables defined in the `Snakefile` or in other parts of the rule.
+
+This rule is a bit special, in that it has no `input:` section. We cannot specify the URL as an input file (`snakemake` cannot check it's timestamp the way it would for local files), which is why we specify the URL in the `params` section instead. In general, `params` can be used for anything that is needed to run the rule, but that is not an input file or directory.
+
+
+## Step 2b: Execute the rule
+
+Now that we have specified our first rule, we will execute it to download
+Shakespeare's text.
+
+`snakemake` is invoked by calling the `snakemake` command, and specifying which
+rule to execute. In addition, we have to specify how many cores we want to
+allocate to the workflow (we will come back to this later), and we recommend
+to always run `snakemake` with `nice`. 
+
+We also recommend to first do a 'dry-run' by specifying the `-np` arguments. 
+Here, `-n` specifies that it should be a dry-run, and `-p` asks `snakemake` to
+print out the shell commands that would be executed. This allows you to check
+that everything was specified correctly before actually starting the workflow.
+
+
+::: {.callout-warning}
+```
+nice snakemake --cores 2 download_data -np
+```
+:::
+
+`snakemake` will list the jobs that need to be run in order for all the files in the workflow to be up to date. For each job, it will also list the reason that it has to be executed (e.g., that the output files are missing, or that an input file was updated by another job), and print out the shell code that will be executed once the job is run.
+This gives us a chance to check that everything looks as expected.
+The output should look similar to the content of the box below:
+
+:::{.callout-important}
+```
+[...]
+rule download_data:
+    output: data_raw/romeo_and_juliet.txt
+    jobid: 0
+    reason: Missing output files: data_raw/romeo_and_juliet.txt
+    resources: tmpdir=<TBD>
+Shell command: 
+		curl -L -o data_raw/romeo_and_juliet.txt https://www.gutenberg.org/ebooks/1513.txt.utf-8
+		
+Job stats:
+job              count
+-------------  -------
+download_data        1
+total                1
+
+Reasons:
+    (check individual jobs above for details)
+    output files have to be generated:
+        download_data
+This was a dry-run (flag -n). The order of jobs does not reflect the order of execution.
+```
+:::
+
+Next, we will run the following in the terminal, again using `nice` to give our
+job a lower priority on the server (it's the same command as before, but remove the `-np` flags):
+
+::: {.callout-warning}
+```
+nice snakemake --cores 2 download_data
+```
+:::
+
+Once finished, you should now have a file with Shakespeare's Romeo and Juliet: 
+
+::: {.callout-warning}
+```
+ls -alh data_raw
+head data_raw/romeo_and_juliet.txt
+```
+:::
+
+If we try to run the workflow again, `snakemake` will realize that nothing actually needs to be executed, since the data file (`data_raw/romeo_and_juliet.txt`) already exists and the rule has not changed since it was last run:
+
+
+::: {.callout-warning}
+```
+nice snakemake --cores 2 download_data
+```
+:::
+
+:::{.callout-important}
+```
+[...]
+Nothing to be done (all requested files are present and up to date).
+```
+:::
+
+# Step 3: Analyse our data
+
+As mentioned, we want to run several analyses on our data.
+
+## Step 3a: Count the number of lines/words/character in the text
+
+In order to count lines, words and character in a text file, we can use the
+[wc](https://www.gnu.org/software/coreutils/wc) core tool on Linux.
+
+Here is how the rule for our `Snakefile` could look like:
+
+::: {.callout-note}
+```
+## Analyze data
+rule count_words:
+    input:
+        "data_raw/{file}.txt",
+	output: 
+		"data_processed/{file}.counts.txt",
+	shell:
+		'''
+		wc {input} > {output}
+		'''
+```
+:::
+
+The `count_words` rule does contain an `input:` section. It is special in another way, though. Instead of specifying a defined input file name (like `data_raw/romeo_and_juliet.txt`), we define the input file using a *wildcard* (here: `{file}`).
+
+The use of wildcards makes it possible to run the same rule for more than one input/output file pair. The value of the `{file}` wildcard is typically determined by other rules in the `Snakefile` that are matched to the `input:` or `output:` parts of rules with wildcards.
+
+At the moment, there is nothing in our `Snakefile` that needs a file of the form `"data_processed/*.counts.txt"`, and if you were to run `snakemake`, there would still be nothing to do.
+
+Let's add the following additional rule above the `download_data` rule: 
+
+::: {.callout-note}
+```
+## All outputs
+rule all:
+	input: 
+		"data_processed/romeo_and_juliet.counts.txt",
+```
+:::
+
+This is again a special rule, because it only has an `input:` section, and it is the first rule in the `Snakefile`. By convention, the first rule in the file is the one that will be run when you call `snakemake` without specifying a specific rule (for example `snakemake` instead of `snakemake download_data`). As this rule has only inputs, `snakemake` will look for suitable rules in the `Snakefile` that could generate those inputs.
+
+This is where `"data_processed/romeo_and_juliet.counts.txt"` will be matched to the `"data_processed/{file}.counts.txt"` output pattern of our `count_words` rule, thereby setting the value of the `{file}` wildcard to `romeo_and_juliet`.
+If you now run `snakemake` again (first a dry run with `-np`, then a normal run), it will count the words in our text:
+
+::: {.callout-warning}
+```
+nice snakemake --cores 2 -np
+
+# if it looks good:
+nice snakemake --cores 2
+```
+:::
+
+You should now have a new file `"data_processed/romeo_and_juliet.counts.txt"` with the number of lines, words and character (bytes) in the text.
+
+To illustrate why such generic rules that are based on wildcards are a powerful feature of `snakemake`, let's create a second text file in `data_raw/own_text.txt` (you can put in whatever you like), and add an additional output to the rule all, so that it will look like this:
+
+::: {.callout-note}
+```
+## All outputs
+rule all:
+	input: 
+		"data_processed/romeo_and_juliet.counts.txt",
+		"data_processed/own_text.counts.txt",
+```
+:::
+
+After re-running `nice snakemake --cores 2`, you will now also get the counts for this new file, without having to add another rule. You can also try to delete the two count files in `data_processed` and rerun the `snakemake` command. It will detect that the two files are missing, and re-generate them in parallel (because they are independent and you provide `snakemake` with two CPU cores).
+
+## Step 3b: Count the number of occurrences of `Romeo` or `Juliet` in the text
+
+There are multiple ways how this job could be accomplished. We will use the Linux `grep` tool here, which can scan a text file and print (or count) the lines that match a certain pattern (see [grep manual](https://man7.org/linux/man-pages/man1/grep.1.html) for more details).
+
+One slight issue is that if there is a line that contains more than a single occurrence of `Romeo` or `Juliet`, we will still count it only once and thus underestimate the true number of occurrences of these names. A possible solution is that we first re-write the text such that each line only contains a single word, and then we use this version of the text to count.
+
+### Rewriting the text to have only a single word per line
+
+Also for this task, we can use a powerful Linux command line tool called `tr` (see [tr manual](https://man7.org/linux/man-pages/man1/tr.1.html) for more details).
+
+Let's add the following rule at the end of our `Snakefile` (underneath the `count_words` rule):
+
+::: {.callout-note}
+```
+rule one_word_per_line:
+    input:
+        "data_raw/{file}.txt",
+    output:
+        "data_processed/{file}.one_word_per_line.txt",
+    shell:
+        '''
+        cat {input} \
+          | tr -d '[:punct:]' \
+          | tr -s '[:space:]' '\n' \
+          > {output}
+        '''
+```
+:::
+
+Here is what it does:
+- `cat` prints the content of a text file on the `STDOUT` (your console)
+- the pipe character `|` connecting two tools by feeding the `STDOUT` from the left to the `STDIN` from the right tool
+- the backslash character `\` at the end of the line allows us to continue the single command sequence on a new line for better readability
+- `tr -d '[:punct:]'` instructs the `tr` tool to remove any punctuation characters (commas, periods, quotes etc.)
+- `tr -s '[:space:]' '\n'` instructs the `tr` tool to substitute any occurrence of a space by a newline (`\n`)
+- the greater-than character `>` captures the `STDIN` from the left and redirects it into a file given on the right
+
+You can see that again we are using the `{file}` wildcard, so that we can run the rule for any matching input file.
+
+Now, we could add the requested output file to our `all` rule. However, let's not do that for the moment (you will soon see that in this case, it is not necessary).
+
+### Count the number of occurrences of a pattern
+
+Let's continue and add another rule that performs the actual counting using `grep`:
+
+::: {.callout-note}
+```
+rule count_matches:
+    input:
+        "data_processed/{file}.one_word_per_line.txt",
+    output:
+        "data_processed/{file}.matchcount.txt",
+    shell:
+        '''
+        grep -Pci '(romeo|juliet)' {input} > {output}
+        '''
+```
+:::
+
+The `-Pci` instructs `grep` to use Perl-compatible regular expressions (`-P`), to just count the matches instead of printing all the matching lines (`c`), and to ignore the case of letters when matching. This rule again uses the `{file}` wildcard, but the actual pattern to count `'(romeo|juliet)'` is hardcoded. This pattern means "either Romeo or Juliet" as a regular expression (the pattern language that `grep` understand, see [this link](https://man7.org/linux/man-pages/man3/pcre2pattern.3.html) for more details). A more general rule could be one that takes the pattern as a parameter, or for simple patterns even as another wildcard, so that the rule could be re-used for additional patterns. We will keep it simple though for the moment.
+
+Finally, we add the desired output file to the rule `all`:
+
+::: {.callout-note}
+```
+## All outputs
+rule all:
+	input: 
+		"data_processed/romeo_and_juliet.counts.txt",
+		"data_processed/own_text.counts.txt",
+		"data_processed/romeo_and_juliet.matchcount.txt",
+```
+:::
+
+When you rerun `snakemake` now, it should figure out automatically what is to do. It should print something like this:
+
+:::{.callout-important}
+```
+[...]
+Building DAG of jobs...
+Job stats:
+job                  count
+-----------------  -------
+all                      1
+count_matches            1
+one_word_per_line        1
+total                    3
+[...]
+```
+:::
+
+which means:
+
+- three rules in total need running (`all`, `one_word_per_line` and `count_matches`)
+- rule `all` does not really run, remember that it is just a way for us to specify all desired outputs
+- rule `count_matches` needs to run because we added `"data_processed/romeo_and_juliet.matchcount.txt"` as a desired output to the rule `all`
+- rule `one_word_per_line` needs to run to produce the required input for `count_matches`
+
+You see that in this case, we did not have to specify the `"data_processed/romeo_and_juliet.one_word_per_line.txt"` file, as it will be implicitly required and generated.
+
+We find that the number of romeo's and juliet's in the text are 514.
+
+## Step 3c: Identify the 10 most frequent words in the text
+
+We will perform this task by writing a custom R script. If you prefer to use another programming language, you are free to do so, but you will have to implement it yourself.
+
+### Add a rule to our `Snakefile` to run an R script
+
+Add the following rule at the end of our `Snakefile`:
+
+::: {.callout-note}
+```
+rule get_most_frequent_words:
+    input:
+        "data_processed/{file}.one_word_per_line.txt",
+    output:
+        "data_processed/{file}.top{n}_words.txt",
+    envmodules:
+        "R-BioC/4.5-3.21-foss-2024.05",
+    script:
+        "scripts/count_most_frequent_words.R"
+```
+:::
+
+In contrast to earlier scripts, you can see two differences:
+
+- In addition to the `{file}` wildcard, there is a second wildcard `{n}` in the output file.
+- The rule has an additional `envmodules:` block that can be used to specify one or several environment modules that should be activated using `module load ...` before running the rule. This is a great way to specify specific software versions that  should be used in a `snakemake` workflow and an important feature to make your workflows reproducible.
+- Instead of a `shell:` block that gives the commands to be run on the terminal, this rule uses a `script:` block that lists a (not yet existing) script to run.
+
+### Write an R script that counts words and outputs the most frequent ones
+
+We now have to implement the script used in the rule `get_most_frequent_words` above. For the script to know what input file to read and how many of the frequent words to output, it will need a way to get parameters from `snakemake`. Scripts that are run using a `script:` block get these parameters via a special, automatically generated object called `snakemake` that you can use inside of your script to access the parameters and other information of the rule being run.
+
+Let's first create a `scripts` folder and an empty file inside:
+
+::: {.callout-warning}
+```
+mkdir scripts
+touch scripts/count_most_frequent_words.R
+```
+:::
+
+Now open the script file `scripts/count_most_frequent_words.R`, copy the following into it, and save it:
+
+::: {.callout-note}
+```
+words <- readLines(snakemake@input[[1]])
+wordcount <- table(words)
+wordcount <- sort(wordcount, decreasing = TRUE)
+sel <- 1:as.numeric(snakemake@wildcards["n"])
+tab <- data.frame(word = names(wordcount)[sel],
+                  count = as.numeric(wordcount[sel]))
+write.table(tab, file = snakemake@output[[1]], sep = "\t", quote = FALSE, row.names = FALSE)
+```
+:::
+
+Here is a quick description what the script does:
+- line 1 reads the first input file (`snakemake@input[[1]]`) into a character vector `words`
+- line 2 counts these words using the `table` function and stores the result in `wordcount`
+- line 3 sorts `wordcount` in decreasing order
+- line 4 creates an index vector from 1 to n (n is obtained from `snakemake@wildcards["n"]`)
+- lines 5 and 6 create a data frame with the n most frequent words
+- line 7 stores the data frame in the first output file (`snakemake@output[[1]]`)
+
+Finally, to perform the counting, add the desired output file to the rule `all`, so that it looks like:
+
+::: {.callout-note}
+```
+## All outputs
+rule all:
+	input: 
+		"data_processed/romeo_and_juliet.counts.txt",
+		"data_processed/own_text.counts.txt",
+		"data_processed/romeo_and_juliet.matchcount.txt",
+		"data_processed/romeo_and_juliet.top10_words.txt",
+```
+:::
+
+Make sure that you include `--use-envmodules` in your `snakemake` call, otherwise, the environment module specified in the rule will not be activated, and you will get an error of the type `"/usr/bin/bash: Rscript: command not found"`:
+
+::: {.callout-warning}
+```
+nice snakemake --cores 2 --use-envmodules -np
+
+# if it looks good:
+nice snakemake --cores 2 --use-envmodules
+```
+:::
+
+### Look at the result and improve it
+
+The result in `"data_processed/romeo_and_juliet.top10_words.txt"` may be a bit disappointing:
+
+:::{.callout-important}
+```
+word count
+the	   780
+I	   580
+and	   549
+to	   534
+of	   478
+a	   460
+in	   359
+is	   327
+you	   323
+my	   304
+```
+:::
+
+It turns out that the most frequent words are not so informative pronouns and articles, often referred to as *stop words*. An improved analysis would exclude such stop words.
+
+Let's add a rule to the `Snakefile`, for exapmle under the `download_data` rule, that downloads a stop word list from the internet:
+
+::: {.callout-note}
+```
+rule download_stopwords:
+    output: 
+        txt = "data_raw/stopwords-en.txt",
+    params:
+        url = "https://raw.githubusercontent.com/stopwords-iso/stopwords-en/refs/heads/master/stopwords-en.txt",
+    shell:
+        '''
+        curl -L -o {output.txt} {params.url}
+        '''
+```
+:::
+
+Furthermore, we modify the `get_most_frequent_words` rule to include the stopword file as an input:
+
+::: {.callout-note}
+```
+rule get_most_frequent_words:
+    input:
+        txt = "data_processed/{file}.one_word_per_line.txt",
+        stopwords = "data_raw/stopwords-en.txt",
+    output:
+        "data_processed/{file}.top{n}_words.txt",
+    envmodules:
+        "R-BioC/4.5-3.21-foss-2024.05",
+    script:
+        "scripts/count_most_frequent_words.R"
+```
+:::
+
+and finally we modify the script `scripts/count_most_frequent_words.R` to use that list to filter the word list:
+
+::: {.callout-note}
+```
+words <- tolower(readLines(snakemake@input[["txt"]]))
+stopwords <- tolower(readLines(snakemake@input[["stopwords"]]))
+words <- words[!words %in% stopwords]
+wordcount <- table(words)
+wordcount <- sort(wordcount, decreasing = TRUE)
+sel <- 1:as.numeric(snakemake@wildcards["n"])
+tab <- data.frame(word = names(wordcount)[sel],
+                  count = as.numeric(wordcount[sel]))
+write.table(tab, file = snakemake@output[[1]], sep = "\t", quote = FALSE, row.names = FALSE)
+```
+:::
+
+This is mostly the same script as before, with the following modifications:
+- the input files in the rule `get_most_frequent_words` now have names for better discrimination, so we refer to them in the R script by their names (`snakemake@input[["txt"]]` or `snakemake@input[["stopwords"]]`)
+- the words are now converted to lower case (in order to not discriminate `JULIET` from `juliet` from `Juliet`, etc.)
+- the new line 2 reads the `stopwords`
+- the new line 3 filters the `words` vector (keeping only words that are not in the `stopwords` vector)
+
+If you re-run `snakemake`, it should detect that the `get_most_frequent_words` needs re-running, thus also downloading the required stopword list, and should create a new, improved output:
+
+:::{.callout-important}
+```
+word  count
+romeo   302
+juliet  182
+thy     170
+nurse   146
+capulet 141
+love    136
+thee    135
+lady    109
+friar   104
+project  84
+```
+:::
+
+We can now clearly see that `romeo` and `juliet` are two very important characters in this text, and also that it is about love. The fact that the counts for the two main characters' names (302 + 182 = 484) is a bit below the cound obtained using `grep` above (514) likely means that there are occurrences of either name that match the regular expression `(romeo|juliet)` but are not identical to just the name, as for example `"Juliet's"` or `"Romeo's"`.
+
+## Step 3d: Create and compile a small Quarto report with word cloud visualization from the 100 most frequent words
+
+As a last step in the analysis, we will create and compile a small Quarto report which will analyze the word frequencies in the text and visualize it as a word cloud. 
+
+Let's first create a folder for our `reports` and create an empty report inside:
+
+::: {.callout-warning}
+```
+mkdir reports
+touch reports/01_wordcloud.qmd
+```
+:::
+
+Then, copy the following text into the empty file `reports/01_wordcloud.qmd` and save it:
+
+::: {.callout-note}
+````{include}
+---
+title: "Wordcloud"
+output: 
+    html:
+        toc: true
+date: today
+params:
+    topdir: "/tachyon/groups/gbioinfo/stadler/documents/teaching/snakemake_intro"
+    txtfile: "data_processed/romeo_and_juliet.one_word_per_line.txt"
+    stopwordfile: "data_raw/stopwords-en.txt"
+---
+
+# Print parameters
+
+```{r}
+params
+```
+
+# Load packages
+
+```{r}
+suppressPackageStartupMessages({
+    library(wordcloud2)
+})
+```
+
+# Load data
+
+```{r}
+words <- tolower(readLines(file.path(params$topdir, params$txtfile)))
+stopwords <- tolower(readLines(file.path(params$topdir, params$stopwordfile)))
+words <- words[!words %in% stopwords]
+```
+
+# Count words
+
+```{r}
+wordcount <- table(words)
+wordcount <- sort(wordcount, decreasing = TRUE)
+
+sel <- 1:100
+tab <- data.frame(word = names(wordcount)[sel],
+                  freq = as.numeric(wordcount[sel]))
+```
+
+# Draw word cloud
+
+```{r}
+wordcloud2(tab)
+```
+
+# Session info
+
+<details>
+<summary><b>
+Session info
+</b></summary>
+```{r}
+sessioninfo::session_info()
+```
+</details>
+````
+:::
+
+Finally, create a now rule `report_wordcloud` at the end of our `Snakefile`:
+
+:::{.callout-note}
+```
+## Reports
+rule report_wordcloud:
+    input:
+        txt = "data_processed/romeo_and_juliet.one_word_per_line.txt",
+        stopword = "data_raw/stopwords-en.txt",
+        qmd = "reports/01_wordcloud.qmd"
+    output:
+        html = "reports/01_wordcloud.html"
+    params:
+        outdir = lambda wildcards, output: topdir + "/" + os.path.dirname(output["html"]),
+        outname = lambda wildcards, output: os.path.basename(output["html"]),
+    envmodules:
+        "R-BioC/4.5-3.21-foss-2024.05",
+        "quarto/1.6.42",
+    shell:
+        '''
+        cd $(dirname {input.qmd}) && \
+        Rscript -e "quarto::quarto_render('$(basename {input.qmd})', execute_params = list(
+            topdir='{topdir}',
+            txtfile='{input.txt}',
+            stopwordfile='{input.stopword}'), output_file='{params.outname}')"
+        '''
+```
+:::
+
+and add `"reports/01_wordcloud.html"` to the rule `all`, so that it now looks like:
+
+::: {.callout-note}
+```
+## All outputs
+rule all:
+	input: 
+		"data_processed/romeo_and_juliet.counts.txt",
+		"data_processed/own_text.counts.txt",
+		"data_processed/romeo_and_juliet.matchcount.txt",
+		"data_processed/romeo_and_juliet.top10_words.txt",
+		"reports/01_wordcloud.html",
+```
+:::
+
+After re-running `snakemake`, you should get `reports/01_wordcloud.html` containing a nice word cloud:
+
+<center>
+![frequent words in "Romeo and Juliet"](images/wordcloud.png)
+</center>
+
+# Additional Information
+
+It can be interesting to look at the structure of the workflow and the dependencies among the rule. 
+`snakemake` can generate such a graph (a 'dag' - directed acyclic graph) for us:
+
+::: {.callout-warning}
+```
+nice snakemake --dag | dot -Tpng > dag.png
+```
+:::
+
+which should look something like this:
+
+<center>
+![DAG](images/dag.png)
+</center>
+
+It is also possible to create an HTML report with all the rules that have been run, including information about when they were run and how much time it took to run them. This report can be generated using:
+
+::: {.callout-warning}
+```
+nice snakemake --report snakemake_report.html
+```
+:::
+
+An example of such a report can be found here: [snakemake_report.html](images/snakemake_report.html)
+
+# Final Snakefile
+
+After all the steps above, we should now have a `Snakefile` that looks something like this: 
+
+::: {.callout-tip}
+```
+topdir = "<here, put the full path to your working directory>"
+
+## All outputs
+rule all:
+    input: 
+        "data_processed/romeo_and_juliet.counts.txt",
+        "data_processed/own_text.counts.txt",
+        "data_processed/romeo_and_juliet.matchcount.txt",
+        "data_processed/romeo_and_juliet.top10_words.txt",
+        "reports/01_wordcloud.html",
+
+
+## Download data
+rule download_data:
+    output: 
+        txt = "data_raw/romeo_and_juliet.txt",
+    params:
+        url = "https://www.gutenberg.org/ebooks/1513.txt.utf-8",
+    shell:
+        '''
+        curl -L -o {output.txt} {params.url}
+        '''
+
+rule download_stopwords:
+    output: 
+        txt = "data_raw/stopwords-en.txt",
+    params:
+        url = "https://raw.githubusercontent.com/stopwords-iso/stopwords-en/refs/heads/master/stopwords-en.txt",
+    shell:
+        '''
+        curl -L -o {output.txt} {params.url}
+        '''
+
+## Analyze data
+rule count_words:
+    input:
+        "data_raw/{file}.txt",
+    output:
+        "data_processed/{file}.counts.txt",
+    shell:
+        '''
+        wc {input} > {output}
+        '''
+
+rule one_word_per_line:
+    input:
+        "data_raw/{file}.txt",
+    output:
+        "data_processed/{file}.one_word_per_line.txt",
+    shell:
+        '''
+        cat {input} \
+          | tr -d '[:punct:]' \
+          | tr -s '[:space:]' '\n' \
+          > {output}
+        '''
+
+rule count_matches:
+    input:
+        "data_processed/{file}.one_word_per_line.txt",
+    output:
+        "data_processed/{file}.matchcount.txt",
+    shell:
+        '''
+        grep -Pci '(romeo|juliet)' {input} > {output}
+        '''
+
+rule get_most_frequent_words:
+    input:
+        txt = "data_processed/{file}.one_word_per_line.txt",
+        stopwords = "data_raw/stopwords-en.txt",
+    output:
+        "data_processed/{file}.top{n}_words.txt",
+    envmodules:
+        "R-BioC/4.5-3.21-foss-2024.05",
+    script:
+        "scripts/count_most_frequent_words.R"
+
+## Reports
+rule report_wordcloud:
+    input:
+        txt = "data_processed/romeo_and_juliet.one_word_per_line.txt",
+        stopword = "data_raw/stopwords-en.txt",
+        qmd = "reports/01_wordcloud.qmd"
+    output:
+        html = "reports/01_wordcloud.html"
+    params:
+        outdir = lambda wildcards, output: topdir + "/" + os.path.dirname(output["html"]),
+        outname = lambda wildcards, output: os.path.basename(output["html"]),
+    envmodules:
+        "R-BioC/4.5-3.21-foss-2024.05",
+        "quarto/1.6.42",
+    shell:
+        '''
+        cd $(dirname {input.qmd}) && \
+        Rscript -e "quarto::quarto_render('$(basename {input.qmd})', execute_params = list(
+            topdir='{topdir}',
+            txtfile='{input.txt}',
+            stopwordfile='{input.stopword}'), output_file='{params.outname}')"
+        '''
+```
+:::
+
+# Link to Feedback form
+
+Please give us your feedback to this lecture using the link below (same for all lectures):
+
+[https://forms.gle/ofV8SawnWSUqcXWo9](https://forms.gle/ofV8SawnWSUqcXWo9)
+
+![](images/feedback_qr_code.png)
+
+# References
+
+- [snakemake website](https://snakemake.github.io/)
+- [snakemake tutorial slides](https://slides.com/johanneskoester/snakemake-tutorial)
+- [snakemake publication](https://f1000research.com/articles/10-33/v3)
+- [snakemake documentation](https://snakemake.readthedocs.io/en/stable/index.html#)
+- Collection of blog posts from C Titus Brown on using `snakemake` for bioinformatics:
+    - [snakemake for doing bioinformatics - a beginner's guide (part 1)](http://ivory.idyll.org/blog/2023-snakemake-slithering-section-1.html)
+    - [snakemake for doing bioinformatics - a beginner's guide (part 2)](http://ivory.idyll.org/blog/2023-snakemake-slithering-section-2.html)
+    - [snakemake for doing bioinformatics - using wildcards to generalize your rules](http://ivory.idyll.org/blog/2023-snakemake-slithering-wildcards.html)
+    - [snakemake for doing bioinformatics - inputs and outputs and more!](http://ivory.idyll.org/blog/2023-snakemake-slithering-input-outputs.html)
+- [Carpentries lesson about snakemake for bioinformatics](https://carpentries-incubator.github.io/snakemake-novice-bioinformatics/)
+- [Blog post by Vince Buffalo](https://vincebuffalo.com/blog/2020/03/04/understanding-snakemake.html)

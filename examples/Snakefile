@@ -1,0 +1,100 @@
+topdir = '/tachyon/groups/gbioinfo/stadler/documents/teaching/snakemake_intro'
+
+## All outputs
+rule all:
+    input: 
+        "data_processed/romeo_and_juliet.counts.txt",
+        "data_processed/own_text.counts.txt",
+        "data_processed/romeo_and_juliet.matchcount.txt",
+        "data_processed/romeo_and_juliet.top10_words.txt",
+        "reports/01_wordcloud.html",
+
+
+## Download data
+rule download_data:
+    output: 
+        txt = "data_raw/romeo_and_juliet.txt",
+    params:
+        url = "https://www.gutenberg.org/ebooks/1513.txt.utf-8",
+    shell:
+        '''
+        curl -L -o {output.txt} {params.url}
+        '''
+
+rule download_stopwords:
+    output: 
+        txt = "data_raw/stopwords-en.txt",
+    params:
+        url = "https://raw.githubusercontent.com/stopwords-iso/stopwords-en/refs/heads/master/stopwords-en.txt",
+    shell:
+        '''
+        curl -L -o {output.txt} {params.url}
+        '''
+
+## Analyze data
+rule count_words:
+    input:
+        "data_raw/{file}.txt",
+    output:
+        "data_processed/{file}.counts.txt",
+    shell:
+        '''
+        wc {input} > {output}
+        '''
+
+rule one_word_per_line:
+    input:
+        "data_raw/{file}.txt",
+    output:
+        "data_processed/{file}.one_word_per_line.txt",
+    shell:
+        '''
+        cat {input} \
+          | tr -d '[:punct:]' \
+          | tr -s '[:space:]' '\n' \
+          > {output}
+        '''
+
+rule count_matches:
+    input:
+        "data_processed/{file}.one_word_per_line.txt",
+    output:
+        "data_processed/{file}.matchcount.txt",
+    shell:
+        '''
+        grep -Pci '(romeo|juliet)' {input} > {output}
+        '''
+
+rule get_most_frequent_words:
+    input:
+        txt = "data_processed/{file}.one_word_per_line.txt",
+        stopwords = "data_raw/stopwords-en.txt",
+    output:
+        "data_processed/{file}.top{n}_words.txt",
+    envmodules:
+        "R-BioC/4.5-3.21-foss-2024.05",
+    script:
+        "scripts/count_most_frequent_words.R"
+
+## Reports
+rule report_wordcloud:
+    input:
+        txt = "data_processed/romeo_and_juliet.one_word_per_line.txt",
+        stopword = "data_raw/stopwords-en.txt",
+        qmd = "reports/01_wordcloud.qmd"
+    output:
+        html = "reports/01_wordcloud.html"
+    params:
+        outdir = lambda wildcards, output: topdir + "/" + os.path.dirname(output["html"]),
+        outname = lambda wildcards, output: os.path.basename(output["html"]),
+    envmodules:
+        "R-BioC/4.5-3.21-foss-2024.05",
+        "quarto/1.6.42",
+    shell:
+        '''
+        cd $(dirname {input.qmd}) && \
+        Rscript -e "quarto::quarto_render('$(basename {input.qmd})', execute_params = list(
+            topdir='{topdir}',
+            txtfile='{input.txt}',
+            stopwordfile='{input.stopword}'), output_file='{params.outname}')"
+        '''

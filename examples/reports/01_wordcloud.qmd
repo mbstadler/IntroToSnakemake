@@ -1,0 +1,62 @@
+---
+title: "Wordcloud"
+output: 
+    html:
+        toc: true
+date: today
+params:
+    topdir: "/tachyon/groups/gbioinfo/stadler/documents/teaching/snakemake_intro"
+    txtfile: "data_processed/romeo_and_juliet.one_word_per_line.txt"
+    stopwordfile: "data_raw/stopwords-en.txt"
+---
+
+# Print parameters
+
+```{r}
+params
+```
+
+# Load packages
+
+```{r}
+suppressPackageStartupMessages({
+    library(wordcloud2)
+})
+```
+
+# Load data
+
+```{r}
+words <- tolower(readLines(file.path(params$topdir, params$txtfile)))
+stopwords <- tolower(readLines(file.path(params$topdir, params$stopwordfile)))
+words <- words[!words %in% stopwords]
+```
+
+# Count words
+
+```{r}
+wordcount <- table(words)
+wordcount <- sort(wordcount, decreasing = TRUE)
+
+sel <- 1:100
+tab <- data.frame(word = names(wordcount)[sel],
+                  freq = as.numeric(wordcount[sel]))
+```
+
+# Draw word cloud
+
+```{r}
+wordcloud2(tab)
+```
+
+# Session info
+
+<details>
+<summary><b>
+Session info
+</b></summary>
+```{r}
+sessioninfo::session_info()
+```
+</details>
+
