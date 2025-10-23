@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Charlotte Soneson, Michael Stadler, Hans-Rudolf Hotz">
-<meta name="dcterms.date" content="2025-10-22">
+<meta name="dcterms.date" content="2025-10-23">
 
 <title>Introduction to workflow management with snakemake</title>
 <style>
@@ -2174,7 +2174,11 @@ vertical-align: -.125em;
   <li><a href="#additional-information" id="toc-additional-information" class="nav-link" data-scroll-target="#additional-information">Additional Information</a></li>
   <li><a href="#final-snakefile" id="toc-final-snakefile" class="nav-link" data-scroll-target="#final-snakefile">Final Snakefile</a></li>
   <li><a href="#link-to-feedback-form" id="toc-link-to-feedback-form" class="nav-link" data-scroll-target="#link-to-feedback-form">Link to Feedback form</a></li>
-  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a>
+  <ul class="collapse">
+  <li><a href="#real-snakemake-workflows-related-to-processing-of-rna-seq-data" id="toc-real-snakemake-workflows-related-to-processing-of-rna-seq-data" class="nav-link" data-scroll-target="#real-snakemake-workflows-related-to-processing-of-rna-seq-data">Real <code>snakemake</code> workflows related to processing of RNA-seq data</a></li>
+  <li><a href="#general-snakemake-information" id="toc-general-snakemake-information" class="nav-link" data-scroll-target="#general-snakemake-information">General <code>snakemake</code> information</a></li>
+  </ul></li>
   </ul>
 </nav>
 </div>
@@ -2199,7 +2203,7 @@ vertical-align: -.125em;
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">October 22, 2025</p>
+      <p class="date">October 23, 2025</p>
     </div>
   </div>
   
@@ -2633,7 +2637,7 @@ total                    3
 <ul>
 <li>In addition to the <code>{file}</code> wildcard, there is a second wildcard <code>{n}</code> in the output file.</li>
 <li>The rule has an additional <code>envmodules:</code> block that can be used to specify one or several environment modules that should be activated using <code>module load ...</code> before running the rule. This is a great way to specify specific software versions that should be used in a <code>snakemake</code> workflow and an important feature to make your workflows reproducible.</li>
-<li>Instead of a <code>shell:</code> block that gives the commands to be run on the terminal, this rule uses a <code>script:</code> block that lists a (not yet existing) script to run.</li>
+<li>Instead of a <code>shell:</code> block that gives the commands to be run on the terminal, this rule uses a <code>script:</code> block that lists a (not yet existing) script to run. It would also have been possible to run the script from a <code>shell:</code> block, e.g. using <code>Rscript myscript.R</code> or <code>R CMD BATCH myscript.R</code>. While these approaches might be preferable in certain cases, for example because they would allow you to capture the R session including console input and output, they will be more difficult to implement for certain aspects, like getting parameters from <code>snakemake</code> (see below).</li>
 </ul>
 </section>
 <section id="write-an-r-script-that-counts-words-and-outputs-the-most-frequent-ones" class="level3">
@@ -3113,6 +3117,15 @@ rule report_wordcloud:
 </section>
 <section id="references" class="level1">
 <h1>References</h1>
+<section id="real-snakemake-workflows-related-to-processing-of-rna-seq-data" class="level2">
+<h2 class="anchored" data-anchor-id="real-snakemake-workflows-related-to-processing-of-rna-seq-data">Real <code>snakemake</code> workflows related to processing of RNA-seq data</h2>
+<ul>
+<li><a href="http://iwww.fmi.ch/groups/bioinformatics/RepRes_2023/intro-to-snakemake.html">FMI snakemake workshop (2023)</a></li>
+<li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6643886/">Orjuela et al. 2019, “ARMOR: An Automated Reproducible MOdular Workflow for Preprocessing and Differential Analysis of RNA-seq Data”</a></li>
+</ul>
+</section>
+<section id="general-snakemake-information" class="level2">
+<h2 class="anchored" data-anchor-id="general-snakemake-information">General <code>snakemake</code> information</h2>
 <ul>
 <li><a href="https://snakemake.github.io/">snakemake website</a></li>
 <li><a href="https://slides.com/johanneskoester/snakemake-tutorial">snakemake tutorial slides</a></li>
@@ -3128,6 +3141,7 @@ rule report_wordcloud:
 <li><a href="https://carpentries-incubator.github.io/snakemake-novice-bioinformatics/">Carpentries lesson about snakemake for bioinformatics</a></li>
 <li><a href="https://vincebuffalo.com/blog/2020/03/04/understanding-snakemake.html">Blog post by Vince Buffalo</a></li>
 </ul>
+</section>
 </section>
 
 </main>
