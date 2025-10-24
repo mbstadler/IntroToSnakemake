@@ -40,7 +40,7 @@ A `snakemake` workflow consists of _rules_, with defined inputs and outputs and 
 
 These rules are defined in a `Snakefile`, a script written in a python-based specification language:
 
-![snakemake overview](snakemake_overview.png)
+![snakemake overview](images/snakemake_overview.png)
 
 Based on the defined rules, `snakemake` derives the dependencies between rules, which can be represented as a graph (rules are the nodes, their dependencies are the directed connections):
 
@@ -336,8 +336,9 @@ rule one_word_per_line:
 :::
 
 Here is what it does:
+
 - `cat` prints the content of a text file on the `STDOUT` (your console)
-- the pipe character `|` connecting two tools by feeding the `STDOUT` from the left to the `STDIN` from the right tool
+- the pipe character `|` connects two tools by feeding the `STDOUT` from the left to the `STDIN` from the right tool
 - the backslash character `\` at the end of the line allows us to continue the single command sequence on a new line for better readability
 - `tr -d '[:punct:]'` instructs the `tr` tool to remove any punctuation characters (commas, periods, quotes etc.)
 - `tr -s '[:space:]' '\n'` instructs the `tr` tool to substitute any occurrence of a space by a newline (`\n`)
@@ -365,7 +366,7 @@ rule count_matches:
 ```
 :::
 
-The `-Pci` instructs `grep` to use Perl-compatible regular expressions (`-P`), to just count the matches instead of printing all the matching lines (`c`), and to ignore the case of letters when matching. This rule again uses the `{file}` wildcard, but the actual pattern to count `'(romeo|juliet)'` is hardcoded. This pattern means "either Romeo or Juliet" as a regular expression (the pattern language that `grep` understand, see [this link](https://man7.org/linux/man-pages/man3/pcre2pattern.3.html) for more details). A more general rule could be one that takes the pattern as a parameter, or for simple patterns even as another wildcard, so that the rule could be re-used for additional patterns. We will keep it simple though for the moment.
+The `-Pci` instructs `grep` to use Perl-compatible regular expressions (`-P`), to just count the matches instead of printing all the matching lines (`c`), and to ignore the case of letters when matching (`i`). This rule again uses the `{file}` wildcard, but the actual pattern to count `'(romeo|juliet)'` is hardcoded. This pattern means "either Romeo or Juliet" as a regular expression (the pattern language that `grep` understand, see [this link](https://man7.org/linux/man-pages/man3/pcre2pattern.3.html) for more details). A more general rule could be one that takes the pattern as a parameter, or for simple patterns even as another wildcard, so that the rule could be re-used for additional patterns. We will keep it simple though for the moment.
 
 Finally, we add the desired output file to the rule `all`:
 
@@ -464,6 +465,7 @@ write.table(tab, file = snakemake@output[[1]], sep = "\t", quote = FALSE, row.na
 :::
 
 Here is a quick description what the script does:
+
 - line 1 reads the first input file (`snakemake@input[[1]]`) into a character vector `words`
 - line 2 counts these words using the `table` function and stores the result in `wordcount`
 - line 3 sorts `wordcount` in decreasing order
@@ -518,7 +520,7 @@ my	   304
 
 It turns out that the most frequent words are not so informative pronouns and articles, often referred to as *stop words*. An improved analysis would exclude such stop words.
 
-Let's add a rule to the `Snakefile`, for exapmle under the `download_data` rule, that downloads a stop word list from the internet:
+Let's add a rule to the `Snakefile`, for example under the `download_data` rule, that downloads a stop word list from the internet:
 
 ::: {.callout-note}
 ```
@@ -568,6 +570,7 @@ write.table(tab, file = snakemake@output[[1]], sep = "\t", quote = FALSE, row.na
 :::
 
 This is mostly the same script as before, with the following modifications:
+
 - the input files in the rule `get_most_frequent_words` now have names for better discrimination, so we refer to them in the R script by their names (`snakemake@input[["txt"]]` or `snakemake@input[["stopwords"]]`)
 - the words are now converted to lower case (in order to not discriminate `JULIET` from `juliet` from `Juliet`, etc.)
 - the new line 2 reads the `stopwords`
@@ -591,7 +594,7 @@ project  84
 ```
 :::
 
-We can now clearly see that `romeo` and `juliet` are two very important characters in this text, and also that it is about love. The fact that the counts for the two main characters' names (302 + 182 = 484) is a bit below the cound obtained using `grep` above (514) likely means that there are occurrences of either name that match the regular expression `(romeo|juliet)` but are not identical to just the name, as for example `"Juliet's"` or `"Romeo's"`.
+We can now clearly see that `romeo` and `juliet` are two very important characters in this text, and also that it is about love. The fact that the counts for the two main characters' names (302 + 182 = 484) is a bit below the count obtained using `grep` above (514) likely means that there are occurrences of either name that match the regular expression `(romeo|juliet)` but are not identical to just the name, as for example `"Juliet's"` or `"Romeo's"`.
 
 ## Step 3d: Create and compile a small Quarto report with word cloud visualization from the 100 most frequent words
 
@@ -615,6 +618,7 @@ title: "Wordcloud"
 output: 
     html:
         toc: true
+        embed-resources: true
 date: today
 params:
     topdir: "/tachyon/groups/gbioinfo/stadler/documents/teaching/snakemake_intro"
@@ -674,7 +678,7 @@ sessioninfo::session_info()
 ````
 :::
 
-Finally, create a now rule `report_wordcloud` at the end of our `Snakefile`:
+Finally, create a new rule `report_wordcloud` at the end of our `Snakefile`:
 
 :::{.callout-note}
 ```
@@ -873,7 +877,7 @@ Please give us your feedback to this lecture using the link below (same for all 
 ## Real `snakemake` workflows related to processing of RNA-seq data
 
 - [FMI snakemake workshop (2023)](http://iwww.fmi.ch/groups/bioinformatics/RepRes_2023/intro-to-snakemake.html)
-- [Orjuela et al. 2019, "ARMOR: An Automated Reproducible MOdular Workflow for Preprocessing and Differential Analysis of RNA-seq Data"](https://pmc.ncbi.nlm.nih.gov/articles/PMC6643886/)
+- [Orjuela et al. 2019, "ARMOR: An Automated Reproducible MOdular Workflow for Preprocessing and Differential Analysis of RNA-seq Data"](https://pmc.ncbi.nlm.nih.gov/articles/PMC6643886/) ([GitHub repository](https://github.com/csoneson/ARMOR))
 
 ## General `snakemake` information
 
