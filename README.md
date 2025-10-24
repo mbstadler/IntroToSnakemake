@@ -1,6 +1,6 @@
 ## Workflow management with Snakemake
 
-This repository contains the material used for "Snakemake: session, part of the
+This repository contains the material used for the "Snakemake"" session, part of the
 "Reproducible research in computational biology" course from the University of
 Basel/FMI.
 
