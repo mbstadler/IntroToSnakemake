@@ -3,6 +3,7 @@ title: "Wordcloud"
 output: 
     html:
         toc: true
+        embed-resources: true
 date: today
 params:
     topdir: "/tachyon/groups/gbioinfo/stadler/documents/teaching/snakemake_intro"

@@ -85,7 +85,6 @@ rule report_wordcloud:
     output:
         html = "reports/01_wordcloud.html"
     params:
-        outdir = lambda wildcards, output: topdir + "/" + os.path.dirname(output["html"]),
         outname = lambda wildcards, output: os.path.basename(output["html"]),
     envmodules:
         "R-BioC/4.5-3.21-foss-2024.05",
@@ -96,5 +95,6 @@ rule report_wordcloud:
         Rscript -e "quarto::quarto_render('$(basename {input.qmd})', execute_params = list(
             topdir='{topdir}',
             txtfile='{input.txt}',
-            stopwordfile='{input.stopword}'), output_file='{params.outname}')"
+            stopwordfile='{input.stopword}'),
+            output_file='{params.outname}')"
         '''

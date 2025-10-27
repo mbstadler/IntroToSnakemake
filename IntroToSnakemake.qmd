@@ -263,9 +263,25 @@ The `count_words` rule does contain an `input:` section. It is special in anothe
 
 The use of wildcards makes it possible to run the same rule for more than one input/output file pair. The value of the `{file}` wildcard is typically determined by other rules in the `Snakefile` that are matched to the `input:` or `output:` parts of rules with wildcards.
 
-At the moment, there is nothing in our `Snakefile` that needs a file of the form `"data_processed/*.counts.txt"`, and if you were to run `snakemake`, there would still be nothing to do.
+At the moment, there is nothing in our `Snakefile` that needs a file of the form `"data_processed/*.counts.txt"`, and if you were to run `snakemake` without specifying a rule or output file, there would still be nothing to do.
 
-Let's add the following additional rule above the `download_data` rule: 
+An important remark about *wildcard* rules: As the value of the *wildcard* is determined by matching it to an output file name, such rules cannot be run using the rule name. For example, the following will throw an error:
+
+::: {.callout-warning}
+```
+nice snakemake --cores 2 count_words
+```
+:::
+
+Instead, such rules need to be triggered by telling `snakemake` the output files that are required, like this (please don't run it - it's just an illustrative example):
+
+::: {.callout-warning}
+```
+nice snakemake --cores 2 data_processed/romeo_and_juliet.counts.txt
+```
+:::
+
+To avoid having to remember and type such output file names, it is common to add a special rule at the top of the `Snakefile` (often called `rule all:`), which lists all required files as `input:` files. Let's add such a rule above the `download_data` rule: 
 
 ::: {.callout-note}
 ```
@@ -691,7 +707,6 @@ rule report_wordcloud:
     output:
         html = "reports/01_wordcloud.html"
     params:
-        outdir = lambda wildcards, output: topdir + "/" + os.path.dirname(output["html"]),
         outname = lambda wildcards, output: os.path.basename(output["html"]),
     envmodules:
         "R-BioC/4.5-3.21-foss-2024.05",
@@ -702,7 +717,8 @@ rule report_wordcloud:
         Rscript -e "quarto::quarto_render('$(basename {input.qmd})', execute_params = list(
             topdir='{topdir}',
             txtfile='{input.txt}',
-            stopwordfile='{input.stopword}'), output_file='{params.outname}')"
+            stopwordfile='{input.stopword}'),
+            output_file='{params.outname}')"
         '''
 ```
 :::
@@ -721,6 +737,9 @@ rule all:
 		"reports/01_wordcloud.html",
 ```
 :::
+The rule `report_wordcloud` uses a special `snakemake` trick that we have not seen yet before: It specifies the `outname` parameter in the `params:` section using a *lambda function*. [Lambda expressions](https://docs.python.org/3/tutorial/controlflow.html#lambda-expressions) are special Python expressions that define a small anonymous function without giving it a name, for use in just that context where they are defined.
+More importantly, this rule illustrates that `snakemake` can also accept an arbitrary Python function instead of a string or list of strings with file names (see this [link](https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#input-functions) for more details). The function could be an ordinary Python function defined elsewhere in the `Snakefile`, or a lambda function as in the example above, and it needs to accept at least one argument called `wildcards`, and optionally additional arguments like `input` or `output`, which are used to access rule properties within that function.
+In the example above, the function infers the output file name (without directory) from the `html` file name in the `output:` section, so that it can be used in the `shell:` section. Note if you prefer, you could also do such operations using `bash`, as in the first line of the `shell:` section, which gets the directory name from the input `qmd` file using `$(dirname ...)`.
 
 After re-running `snakemake`, you should get `reports/01_wordcloud.html` containing a nice word cloud:
 
@@ -848,7 +867,6 @@ rule report_wordcloud:
     output:
         html = "reports/01_wordcloud.html"
     params:
-        outdir = lambda wildcards, output: topdir + "/" + os.path.dirname(output["html"]),
         outname = lambda wildcards, output: os.path.basename(output["html"]),
     envmodules:
         "R-BioC/4.5-3.21-foss-2024.05",
@@ -859,7 +877,8 @@ rule report_wordcloud:
         Rscript -e "quarto::quarto_render('$(basename {input.qmd})', execute_params = list(
             topdir='{topdir}',
             txtfile='{input.txt}',
-            stopwordfile='{input.stopword}'), output_file='{params.outname}')"
+            stopwordfile='{input.stopword}'),
+            output_file='{params.outname}')"
         '''
 ```
 :::
