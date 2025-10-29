@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Charlotte Soneson, Michael Stadler, Hans-Rudolf Hotz">
-<meta name="dcterms.date" content="2025-10-27">
+<meta name="dcterms.date" content="2025-10-29">
 
 <title>Introduction to workflow management with snakemake</title>
 <style>
@@ -2203,7 +2203,7 @@ vertical-align: -.125em;
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">October 27, 2025</p>
+      <p class="date">October 29, 2025</p>
     </div>
   </div>
   
@@ -2667,7 +2667,7 @@ total                    3
 <ul>
 <li>In addition to the <code>{file}</code> wildcard, there is a second wildcard <code>{n}</code> in the output file.</li>
 <li>The rule has an additional <code>envmodules:</code> block that can be used to specify one or several environment modules that should be activated using <code>module load ...</code> before running the rule. This is a great way to specify specific software versions that should be used in a <code>snakemake</code> workflow and an important feature to make your workflows reproducible.</li>
-<li>Instead of a <code>shell:</code> block that gives the commands to be run on the terminal, this rule uses a <code>script:</code> block that lists a (not yet existing) script to run. It would also have been possible to run the script from a <code>shell:</code> block, e.g. using <code>Rscript myscript.R</code> or <code>R CMD BATCH myscript.R</code>. While these approaches might be preferable in certain cases, for example because they would allow you to capture the R session including console input and output, they will be more difficult to implement for certain aspects, like getting parameters from <code>snakemake</code> (see below).</li>
+<li>Instead of a <code>shell:</code> block that gives the commands to be run on the terminal, this rule uses a <code>script:</code> block that lists a (not yet existing) script to run. Actually, it is possible to put any shell command into a <code>shell:</code> block, including one that runs a Python or an R script, like <code>python myscript.py</code> or <code>R CMD BATCH myscript.R output.txt</code>. While these approaches might be preferable in certain cases, for example because they would allow you to capture the R session including console input and output, they will be more difficult to implement for certain aspects, like getting parameters from <code>snakemake</code> (see below).</li>
 </ul>
 </section>
 <section id="write-an-r-script-that-counts-words-and-outputs-the-most-frequent-ones" class="level3">
