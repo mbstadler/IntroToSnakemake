@@ -895,7 +895,6 @@ Please give us your feedback to this lecture using the link below (same for all 
 
 ## Real `snakemake` workflows related to processing of RNA-seq data
 
-- [FMI snakemake workshop (2023)](http://iwww.fmi.ch/groups/bioinformatics/RepRes_2023/intro-to-snakemake.html)
 - [Orjuela et al. 2019, "ARMOR: An Automated Reproducible MOdular Workflow for Preprocessing and Differential Analysis of RNA-seq Data"](https://pmc.ncbi.nlm.nih.gov/articles/PMC6643886/) ([GitHub repository](https://github.com/csoneson/ARMOR))
 
 ## General `snakemake` information
@@ -910,4 +909,3 @@ Please give us your feedback to this lecture using the link below (same for all 
     - [snakemake for doing bioinformatics - using wildcards to generalize your rules](http://ivory.idyll.org/blog/2023-snakemake-slithering-wildcards.html)
     - [snakemake for doing bioinformatics - inputs and outputs and more!](http://ivory.idyll.org/blog/2023-snakemake-slithering-input-outputs.html)
 - [Carpentries lesson about snakemake for bioinformatics](https://carpentries-incubator.github.io/snakemake-novice-bioinformatics/)
-- [Blog post by Vince Buffalo](https://vincebuffalo.com/blog/2020/03/04/understanding-snakemake.html)
