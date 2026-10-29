@@ -887,7 +887,7 @@ rule report_wordcloud:
 
 Please give us your feedback to this lecture using the link below (same for all lectures):
 
-[https://forms.gle/ofV8SawnWSUqcXWo9](https://forms.gle/ofV8SawnWSUqcXWo9)
+[https://forms.gle/2Hymmfc8U4xMAmEk8](https://forms.gle/2Hymmfc8U4xMAmEk8)
 
 ![](images/feedback_qr_code.png)
 
